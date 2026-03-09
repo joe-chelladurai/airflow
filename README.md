@@ -1,4 +1,6 @@
-# Weather ETL Pipeline with Apache Airflow
+# Apache Airflow
+
+## Extract-Transform-Load Pipeline with Open-source Weather Data
 
 An automated ETL pipeline that fetches **real-time weather forecasts** for 8 major cities around the world, transforms the data, and loads it into PostgreSQL — orchestrated with Apache Airflow.
 

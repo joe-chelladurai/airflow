@@ -7,13 +7,14 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
-    _PIP_ADDITIONAL_REQUIREMENTS: requests pandas sqlalchemy psycopg2-binary
+    _PIP_ADDITIONAL_REQUIREMENTS: requests pandas sqlalchemy psycopg2-binary dbt-postgres
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
     - ./data:/opt/airflow/data
     - ./sql:/opt/airflow/sql
+    - ../dbt:/opt/airflow/dbt
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     postgres:

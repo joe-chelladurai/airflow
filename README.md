@@ -2,7 +2,7 @@
 
 ## Extract-Transform-Load Pipeline with Open-source Weather Data
 
-An automated ETL pipeline that fetches **real-time weather forecasts** for 8 major cities around the world, transforms the data, and loads it into PostgreSQL — orchestrated with Apache Airflow.
+An end-to-end data pipeline that fetches **real-time weather forecasts** for 8 major cities, loads raw data into PostgreSQL via **Apache Airflow**, and transforms it into analytics-ready models using **dbt**.
 
 ## Data Source
 
@@ -72,13 +72,16 @@ Open-Meteo API
 ```
 airflow/
 ├── dags/
-│   └── weather_etl.py        # Pipeline logic (extract → transform → load → summarize → report)
+│   ├── weather_etl.py        # ETL pipeline (extract → transform → load → summarize → report)
+│   └── dbt_transform.py      # dbt orchestration DAG (seed → run → test)
 ├── sql/
 │   └── init.sql              # Creates daily_weather and weather_summary tables
-├── docker-compose.yml        # Airflow webserver, scheduler, and Postgres
+├── docker-compose.yml        # Airflow webserver, scheduler, Postgres
 ├── .env                      # Environment config
 └── .gitignore
 ```
+
+The dbt transformation project lives in a sibling repo at `../dbt/` and is mounted into the Airflow containers via docker-compose.
 
 ## Setup
 
@@ -119,9 +122,26 @@ docker compose down       # Stop containers (data is preserved)
 docker compose down -v    # Stop containers and delete all data
 ```
 
+## dbt Transformation Layer
+
+The `dbt/` project builds a proper transformation layer on top of the raw data:
+
+| Layer | Model | Description |
+|-------|-------|-------------|
+| Staging | `stg_daily_weather` | Clean and rename raw columns, compute daylight hours |
+| Intermediate | `int_weather_metrics` | Enrich with city metadata, classify severity, compute comfort index |
+| Mart | `mart_city_weather_summary` | 7-day rolling aggregates per city |
+| Mart | `mart_extreme_weather_events` | Flag extreme heat, cold, rain, and wind events |
+| Mart | `mart_forecast_comparison` | Cross-city rankings by warmth, dryness, comfort |
+
+The `dbt_weather_transform` DAG in Airflow orchestrates `dbt seed`, `dbt run`, and `dbt test` after the ETL pipeline completes.
+
+See the sibling `dbt` repo for full details.
+
 ## Tech Stack
 
 - **Apache Airflow 2.10** — workflow orchestration
+- **dbt (data build tool)** — SQL-based data transformation
 - **PostgreSQL 15** — data storage
 - **Open-Meteo API** — real-time weather data
 - **Docker Compose** — containerized infrastructure
